@@ -85,7 +85,7 @@ local close = create("TextButton", {
 }, header)
 corner(close, 7)
 
--- جابه‌جایی پنل از بالا و کناره
+-- جابه‌جایی پنل
 local dragArea = create("Frame", {
     Size = UDim2.new(0, 12, 1, -45),
     Position = UDim2.new(1, -12, 0, 45),
@@ -107,9 +107,7 @@ end
 
 local function updateDrag(input)
     if not dragging then return end
-
     local delta = input.Position - dragStart
-
     main.Position = UDim2.new(
         startPosition.X.Scale,
         startPosition.X.Offset + delta.X,
@@ -156,7 +154,7 @@ local sidebar = create("Frame", {
 corner(sidebar, 9)
 
 create("UIListLayout", {
-    Padding = UDim.new(0, 8),
+    Padding = UDim.new(0, 6),
     SortOrder = Enum.SortOrder.LayoutOrder
 }, sidebar)
 
@@ -170,6 +168,7 @@ local names = {
     "خانه",
     "حرکت",
     "بازیکنان",
+    "Fling Cyber",
     "گزارش‌ها",
     "تنظیمات"
 }
@@ -179,12 +178,12 @@ local tabs = {}
 
 for _, name in ipairs(names) do
     local tab = create("TextButton", {
-        Size = UDim2.new(1, -12, 0, 39),
+        Size = UDim2.new(1, -12, 0, 34),
         Position = UDim2.fromOffset(6, 0),
         BackgroundColor3 = Color3.fromRGB(38, 28, 35),
         Text = name,
         TextColor3 = WHITE,
-        TextSize = 14,
+        TextSize = 12,
         Font = Enum.Font.GothamBold,
         BorderSizePixel = 0
     }, sidebar)
@@ -224,7 +223,6 @@ end
 local function showPage(name)
     for n, page in pairs(pages) do
         page.Visible = n == name
-
         tabs[n].BackgroundColor3 =
             n == name and RED or Color3.fromRGB(38, 28, 35)
     end
@@ -238,7 +236,7 @@ end
 
 showPage("خانه")
 
--- ابزارهای متن و دکمه
+-- ابزارها
 local function label(parent, text)
     return create("TextLabel", {
         Size = UDim2.new(1, -4, 0, 28),
@@ -266,7 +264,6 @@ local function button(parent, text, callback)
     stroke(b, RED, 1)
 
     b.MouseButton1Click:Connect(callback)
-
     return b
 end
 
@@ -289,7 +286,7 @@ local function setStatus(text)
     statusLabel.Text = "وضعیت: " .. text
 end
 
--- گزارش ورود و خروج
+-- گزارش‌ها
 local reports = pages["گزارش‌ها"]
 
 label(reports, "گزارش ورود و خروج بازیکنان")
@@ -335,23 +332,13 @@ local function addReport(message, color)
 end
 
 Players.PlayerAdded:Connect(function(target)
-    countLabel.Text =
-        "تعداد بازیکنان: " .. #Players:GetPlayers()
-
-    addReport(
-        target.Name .. " وارد سرور شد",
-        Color3.fromRGB(80, 230, 120)
-    )
+    countLabel.Text = "تعداد بازیکنان: " .. #Players:GetPlayers()
+    addReport(target.Name .. " وارد سرور شد", Color3.fromRGB(80, 230, 120))
 end)
 
 Players.PlayerRemoving:Connect(function(target)
-    countLabel.Text =
-        "تعداد بازیکنان: " .. (#Players:GetPlayers() - 1)
-
-    addReport(
-        target.Name .. " سرور را ترک کرد",
-        Color3.fromRGB(255, 100, 100)
-    )
+    countLabel.Text = "تعداد بازیکنان: " .. (#Players:GetPlayers() - 1)
+    addReport(target.Name .. " سرور را ترک کرد", Color3.fromRGB(255, 100, 100))
 end)
 
 -- حرکت
@@ -375,7 +362,6 @@ end
 
 local function applyMovement()
     local hum = getHumanoid()
-
     if hum then
         hum.WalkSpeed = walkSpeed
         hum.UseJumpPower = true
@@ -407,26 +393,18 @@ button(movement, "کاهش پرش -10", function()
     setStatus("قدرت پرش: " .. jumpPower)
 end)
 
--- =========================================
--- CYBER57 FLY | MOBILE + PC
--- =========================================
-
+-- Fly (بدون تغییر)
 local flying = false
 local flyConnection
-
 local flyVelocity
 local flyGyro
-
 local flyRoot
 local flyHumanoid
-
 local oldAutoRotate
 local oldPlatformStand
-
 local flyUp = false
 local flyDown = false
 
--- رابط دکمه‌های موبایل
 local flyControls = create("Frame", {
     Name = "CYBER57_FlyControls",
     Size = UDim2.fromOffset(76, 158),
@@ -451,23 +429,11 @@ local function makeFlyButton(name, text, y, color)
 
     corner(b, 14)
     stroke(b, WHITE, 1)
-
     return b
 end
 
-local upButton = makeFlyButton(
-    "FlyUpButton",
-    "▲",
-    0,
-    Color3.fromRGB(35, 145, 75)
-)
-
-local downButton = makeFlyButton(
-    "FlyDownButton",
-    "▼",
-    82,
-    Color3.fromRGB(35, 90, 160)
-)
+local upButton = makeFlyButton("FlyUpButton", "▲", 0, Color3.fromRGB(35, 145, 75))
+local downButton = makeFlyButton("FlyDownButton", "▼", 82, Color3.fromRGB(35, 90, 160))
 
 local function connectHold(btn, callback)
     btn.InputBegan:Connect(function(input)
@@ -476,7 +442,6 @@ local function connectHold(btn, callback)
             callback(true)
         end
     end)
-
     btn.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.Touch
             or input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -485,42 +450,23 @@ local function connectHold(btn, callback)
     end)
 end
 
-connectHold(upButton, function(value)
-    flyUp = value
-end)
-
-connectHold(downButton, function(value)
-    flyDown = value
-end)
+connectHold(upButton, function(value) flyUp = value end)
+connectHold(downButton, function(value) flyDown = value end)
 
 local function cleanupFly()
     flying = false
     flyUp = false
     flyDown = false
-
     flyControls.Visible = false
 
-    if flyConnection then
-        flyConnection:Disconnect()
-        flyConnection = nil
-    end
-
-    if flyVelocity then
-        flyVelocity:Destroy()
-        flyVelocity = nil
-    end
-
-    if flyGyro then
-        flyGyro:Destroy()
-        flyGyro = nil
-    end
+    if flyConnection then flyConnection:Disconnect() flyConnection = nil end
+    if flyVelocity then flyVelocity:Destroy() flyVelocity = nil end
+    if flyGyro then flyGyro:Destroy() flyGyro = nil end
 
     if flyHumanoid and flyHumanoid.Parent then
         flyHumanoid.AutoRotate = oldAutoRotate
         flyHumanoid.PlatformStand = oldPlatformStand
-        flyHumanoid:ChangeState(
-            Enum.HumanoidStateType.GettingUp
-        )
+        flyHumanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
     end
 
     flyRoot = nil
@@ -534,7 +480,6 @@ end
 
 local function startFly()
     if flying then return end
-
     cleanupFly()
 
     local character = getCharacter()
@@ -548,14 +493,11 @@ local function startFly()
 
     flyRoot = root
     flyHumanoid = humanoid
-
     oldAutoRotate = humanoid.AutoRotate
     oldPlatformStand = humanoid.PlatformStand
-
     humanoid.AutoRotate = false
     humanoid.PlatformStand = false
 
-    -- روش قدیمی Fly
     flyVelocity = Instance.new("BodyVelocity")
     flyVelocity.Name = "CYBER57_FlyVelocity"
     flyVelocity.MaxForce = Vector3.new(1e6, 1e6, 1e6)
@@ -574,9 +516,7 @@ local function startFly()
     flyControls.Visible = true
 
     flyConnection = RunService.RenderStepped:Connect(function()
-        if not flying
-            or not root.Parent
-            or humanoid.Health <= 0 then
+        if not flying or not root.Parent or humanoid.Health <= 0 then
             stopFly()
             return
         end
@@ -584,43 +524,24 @@ local function startFly()
         local camera = workspace.CurrentCamera
         if not camera then return end
 
-        -- دریافت جهت جوی‌استیک موبایل
         local moveDirection = humanoid.MoveDirection
-
-        -- حرکت افقی
-        local horizontal = Vector3.new(
-            moveDirection.X,
-            0,
-            moveDirection.Z
-        )
+        local horizontal = Vector3.new(moveDirection.X, 0, moveDirection.Z)
 
         if horizontal.Magnitude > 1 then
             horizontal = horizontal.Unit
         end
 
-        -- حرکت عمودی با دکمه‌های موبایل
         local vertical = 0
+        if flyUp and not flyDown then vertical = flySpeed
+        elseif flyDown and not flyUp then vertical = -flySpeed end
 
-        if flyUp and not flyDown then
-            vertical = flySpeed
-        elseif flyDown and not flyUp then
-            vertical = -flySpeed
-        end
+        flyVelocity.Velocity = (horizontal * flySpeed) + Vector3.new(0, vertical, 0)
 
-        -- سرعت عمودی صفر = حفظ ارتفاع
-        flyVelocity.Velocity =
-            (horizontal * flySpeed)
-            + Vector3.new(0, vertical, 0)
-
-        -- چرخش کاراکتر با دوربین
         local look = camera.CFrame.LookVector
         local flatLook = Vector3.new(look.X, 0, look.Z)
 
         if flatLook.Magnitude > 0.001 then
-            flyGyro.CFrame = CFrame.lookAt(
-                root.Position,
-                root.Position + flatLook.Unit
-            )
+            flyGyro.CFrame = CFrame.lookAt(root.Position, root.Position + flatLook.Unit)
         end
     end)
 
@@ -628,11 +549,7 @@ local function startFly()
 end
 
 button(movement, "روشن / خاموش پرواز", function()
-    if flying then
-        stopFly()
-    else
-        startFly()
-    end
+    if flying then stopFly() else startFly() end
 end)
 
 button(movement, "افزایش سرعت پرواز +5", function()
@@ -652,29 +569,19 @@ local spinConnection
 button(movement, "چرخش روشن / خاموش", function()
     spinEnabled = not spinEnabled
 
-    if spinConnection then
-        spinConnection:Disconnect()
-        spinConnection = nil
-    end
+    if spinConnection then spinConnection:Disconnect() spinConnection = nil end
 
     if spinEnabled then
         spinConnection = RunService.Heartbeat:Connect(function(dt)
             local char = getCharacter()
             local root = char and char:FindFirstChild("HumanoidRootPart")
-
             if root then
-                root.CFrame *= CFrame.Angles(
-                    0,
-                    math.rad(spinSpeed) * dt * 60,
-                    0
-                )
+                root.CFrame *= CFrame.Angles(0, math.rad(spinSpeed) * dt * 60, 0)
             end
         end)
     end
 
-    setStatus(
-        spinEnabled and "چرخش روشن" or "چرخش خاموش"
-    )
+    setStatus(spinEnabled and "چرخش روشن" or "چرخش خاموش")
 end)
 
 button(movement, "افزایش سرعت چرخش +2", function()
@@ -705,9 +612,7 @@ create("UIListLayout", {
 
 local function refreshPlayers()
     for _, child in ipairs(playerList:GetChildren()) do
-        if child:IsA("Frame") then
-            child:Destroy()
-        end
+        if child:IsA("Frame") then child:Destroy() end
     end
 
     for _, target in ipairs(Players:GetPlayers()) do
@@ -756,7 +661,6 @@ local function refreshPlayers()
         tp.MouseButton1Click:Connect(function()
             local myChar = getCharacter()
             local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
-
             local targetChar = target.Character
             local targetRoot = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
 
@@ -773,7 +677,7 @@ end
 button(playersPage, "به‌روزرسانی فهرست", refreshPlayers)
 refreshPlayers()
 
--- هایلایت بنفش
+-- ESP
 local espEnabled = false
 local highlights = {}
 local characterConnections = {}
@@ -787,7 +691,6 @@ end
 
 local function addHighlight(target)
     if target == Player or not espEnabled then return end
-
     removeHighlight(target)
 
     local char = target.Character
@@ -807,29 +710,21 @@ local function addHighlight(target)
 end
 
 local function watchPlayer(target)
-    if target == Player or characterConnections[target] then
-        return
-    end
+    if target == Player or characterConnections[target] then return end
 
     characterConnections[target] = target.CharacterAdded:Connect(function()
         task.wait(0.4)
         addHighlight(target)
     end)
 
-    if espEnabled then
-        addHighlight(target)
-    end
+    if espEnabled then addHighlight(target) end
 end
 
-for _, target in ipairs(Players:GetPlayers()) do
-    watchPlayer(target)
-end
-
+for _, target in ipairs(Players:GetPlayers()) do watchPlayer(target) end
 Players.PlayerAdded:Connect(watchPlayer)
 
 Players.PlayerRemoving:Connect(function(target)
     removeHighlight(target)
-
     if characterConnections[target] then
         characterConnections[target]:Disconnect()
         characterConnections[target] = nil
@@ -838,64 +733,25 @@ end)
 
 local function setESP(enabled)
     espEnabled = enabled
-
     for _, target in ipairs(Players:GetPlayers()) do
-        if enabled then
-            addHighlight(target)
-        else
-            removeHighlight(target)
-        end
+        if enabled then addHighlight(target) else removeHighlight(target) end
     end
 end
 
 button(playersPage, "نمایش کاراکترها از پشت دیوار: روشن / خاموش", function()
     setESP(not espEnabled)
-
-    setStatus(
-        espEnabled and "نمایش کاراکترها روشن"
-        or "نمایش کاراکترها خاموش"
-    )
+    setStatus(espEnabled and "نمایش کاراکترها روشن" or "نمایش کاراکترها خاموش")
 end)
 
 -- =========================================
--- CYBER57 FLING ALL | MULTI-TARGET
+-- CYBER57 FLING CORE (used by both Selected & Auto)
 -- =========================================
 
 local cyberFlingActive = false
 local cyberFlingThreads = {}
 local cyberFlingOldPos = {}
 local cyberFlingOldFPDH = workspace.FallenPartsDestroyHeight
-
-local function cyberFlingStopAll()
-    cyberFlingActive = false
-
-    for _, thread in pairs(cyberFlingThreads) do
-        if coroutine.status(thread) ~= "dead" then
-            pcall(function() task.cancel(thread) end)
-        end
-    end
-
-    cyberFlingThreads = {}
-
-    workspace.FallenPartsDestroyHeight = cyberFlingOldFPDH
-
-    local myChar = getCharacter()
-    local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
-
-    if myHum then
-        myHum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
-        workspace.CurrentCamera.CameraSubject = myHum
-    end
-
-    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
-
-    if myRoot then
-        local bv = myRoot:FindFirstChild("CYBER57_FlingAnchor")
-        if bv then bv:Destroy() end
-    end
-
-    setStatus("Fling ALL خاموش")
-end
+local cyberFlingStopRequested = false
 
 local function cyberFlingTarget(target)
     if target == Player then return end
@@ -904,9 +760,7 @@ local function cyberFlingTarget(target)
     local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
     local myRoot = myHum and myHum.RootPart
 
-    if not myChar or not myHum or not myRoot then
-        return
-    end
+    if not myChar or not myHum or not myRoot then return end
 
     local tChar = target.Character
     if not tChar then return end
@@ -922,21 +776,13 @@ local function cyberFlingTarget(target)
         cyberFlingOldPos[target] = myRoot.CFrame
     end
 
-    if tHum and tHum.Sit then
-        return
-    end
+    if tHum and tHum.Sit then return end
 
-    if tHead then
-        workspace.CurrentCamera.CameraSubject = tHead
-    elseif tHandle then
-        workspace.CurrentCamera.CameraSubject = tHandle
-    elseif tHum and tRoot then
-        workspace.CurrentCamera.CameraSubject = tHum
-    end
+    if tHead then workspace.CurrentCamera.CameraSubject = tHead
+    elseif tHandle then workspace.CurrentCamera.CameraSubject = tHandle
+    elseif tHum and tRoot then workspace.CurrentCamera.CameraSubject = tHum end
 
-    if not tChar:FindFirstChildWhichIsA("BasePart") then
-        return
-    end
+    if not tChar:FindFirstChildWhichIsA("BasePart") then return end
 
     local function applyPos(basePart, pos, ang)
         myRoot.CFrame = CFrame.new(basePart.Position) * pos * ang
@@ -951,104 +797,41 @@ local function cyberFlingTarget(target)
         local angle = 0
 
         repeat
-            if not cyberFlingActive then break end
+            if cyberFlingStopRequested then break end
             if not myRoot or not myRoot.Parent then break end
 
             if basePart.Velocity.Magnitude < 50 then
                 angle = angle + 100
 
-                applyPos(
-                    basePart,
-                    CFrame.new(0, 1.5, 0) + tHum.MoveDirection * basePart.Velocity.Magnitude / 1.25,
-                    CFrame.Angles(math.rad(angle), 0, 0)
-                )
+                applyPos(basePart, CFrame.new(0, 1.5, 0) + tHum.MoveDirection * basePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(angle), 0, 0))
                 task.wait()
-
-                applyPos(
-                    basePart,
-                    CFrame.new(0, -1.5, 0) + tHum.MoveDirection * basePart.Velocity.Magnitude / 1.25,
-                    CFrame.Angles(math.rad(angle), 0, 0)
-                )
+                applyPos(basePart, CFrame.new(0, -1.5, 0) + tHum.MoveDirection * basePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(angle), 0, 0))
                 task.wait()
-
-                applyPos(
-                    basePart,
-                    CFrame.new(0, 1.5, 0) + tHum.MoveDirection * basePart.Velocity.Magnitude / 1.25,
-                    CFrame.Angles(math.rad(angle), 0, 0)
-                )
+                applyPos(basePart, CFrame.new(0, 1.5, 0) + tHum.MoveDirection * basePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(angle), 0, 0))
                 task.wait()
-
-                applyPos(
-                    basePart,
-                    CFrame.new(0, -1.5, 0) + tHum.MoveDirection * basePart.Velocity.Magnitude / 1.25,
-                    CFrame.Angles(math.rad(angle), 0, 0)
-                )
+                applyPos(basePart, CFrame.new(0, -1.5, 0) + tHum.MoveDirection * basePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(angle), 0, 0))
                 task.wait()
-
-                applyPos(
-                    basePart,
-                    CFrame.new(0, 1.5, 0) + tHum.MoveDirection,
-                    CFrame.Angles(math.rad(angle), 0, 0)
-                )
+                applyPos(basePart, CFrame.new(0, 1.5, 0) + tHum.MoveDirection, CFrame.Angles(math.rad(angle), 0, 0))
                 task.wait()
-
-                applyPos(
-                    basePart,
-                    CFrame.new(0, -1.5, 0) + tHum.MoveDirection,
-                    CFrame.Angles(math.rad(angle), 0, 0)
-                )
+                applyPos(basePart, CFrame.new(0, -1.5, 0) + tHum.MoveDirection, CFrame.Angles(math.rad(angle), 0, 0))
                 task.wait()
             else
-                applyPos(
-                    basePart,
-                    CFrame.new(0, 1.5, tHum.WalkSpeed),
-                    CFrame.Angles(math.rad(90), 0, 0)
-                )
+                applyPos(basePart, CFrame.new(0, 1.5, tHum.WalkSpeed), CFrame.Angles(math.rad(90), 0, 0))
                 task.wait()
-
-                applyPos(
-                    basePart,
-                    CFrame.new(0, -1.5, -tHum.WalkSpeed),
-                    CFrame.Angles(0, 0, 0)
-                )
+                applyPos(basePart, CFrame.new(0, -1.5, -tHum.WalkSpeed), CFrame.Angles(0, 0, 0))
                 task.wait()
-
-                applyPos(
-                    basePart,
-                    CFrame.new(0, 1.5, tHum.WalkSpeed),
-                    CFrame.Angles(math.rad(90), 0, 0)
-                )
+                applyPos(basePart, CFrame.new(0, 1.5, tHum.WalkSpeed), CFrame.Angles(math.rad(90), 0, 0))
                 task.wait()
-
-                applyPos(
-                    basePart,
-                    CFrame.new(0, -1.5, 0),
-                    CFrame.Angles(math.rad(90), 0, 0)
-                )
+                applyPos(basePart, CFrame.new(0, -1.5, 0), CFrame.Angles(math.rad(90), 0, 0))
                 task.wait()
-
-                applyPos(
-                    basePart,
-                    CFrame.new(0, -1.5, 0),
-                    CFrame.Angles(0, 0, 0)
-                )
+                applyPos(basePart, CFrame.new(0, -1.5, 0), CFrame.Angles(0, 0, 0))
                 task.wait()
-
-                applyPos(
-                    basePart,
-                    CFrame.new(0, -1.5, 0),
-                    CFrame.Angles(math.rad(90), 0, 0)
-                )
+                applyPos(basePart, CFrame.new(0, -1.5, 0), CFrame.Angles(math.rad(90), 0, 0))
                 task.wait()
-
-                applyPos(
-                    basePart,
-                    CFrame.new(0, -1.5, 0),
-                    CFrame.Angles(0, 0, 0)
-                )
+                applyPos(basePart, CFrame.new(0, -1.5, 0), CFrame.Angles(0, 0, 0))
                 task.wait()
             end
-        until startTime + duration < tick() or not cyberFlingActive
+        until startTime + duration < tick() or cyberFlingStopRequested
     end
 
     workspace.FallenPartsDestroyHeight = 0 / 0
@@ -1061,13 +844,9 @@ local function cyberFlingTarget(target)
 
     myHum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
 
-    if tRoot then
-        flingBasePart(tRoot)
-    elseif tHead then
-        flingBasePart(tHead)
-    elseif tHandle then
-        flingBasePart(tHandle)
-    end
+    if tRoot then flingBasePart(tRoot)
+    elseif tHead then flingBasePart(tHead)
+    elseif tHandle then flingBasePart(tHandle) end
 
     bv:Destroy()
     myHum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
@@ -1088,49 +867,278 @@ local function cyberFlingTarget(target)
                 end
             end
             task.wait()
-        until (myRoot.Position - savedPos.p).Magnitude < 25
-            or not cyberFlingActive
+        until (myRoot.Position - savedPos.p).Magnitude < 25 or cyberFlingStopRequested
 
         workspace.FallenPartsDestroyHeight = cyberFlingOldFPDH
     end
 end
 
-local function cyberFlingStartAll()
-    if cyberFlingActive then return end
+local function cyberFlingStopAll()
+    cyberFlingStopRequested = true
 
-    local targets = {}
+    for _, thread in pairs(cyberFlingThreads) do
+        if coroutine.status(thread) ~= "dead" then
+            pcall(function() task.cancel(thread) end)
+        end
+    end
+
+    cyberFlingThreads = {}
+
+    workspace.FallenPartsDestroyHeight = cyberFlingOldFPDH
+
+    local myChar = getCharacter()
+    local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
+
+    if myHum then
+        myHum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+        workspace.CurrentCamera.CameraSubject = myHum
+    end
+
+    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+    if myRoot then
+        local bv = myRoot:FindFirstChild("CYBER57_FlingAnchor")
+        if bv then bv:Destroy() end
+    end
+end
+
+-- =========================================
+-- CYBER57 FLING AUTO LOOP
+-- =========================================
+
+local autoFlingRunning = false
+local autoFlingThread = nil
+
+local function cyberFlingAutoLoop(interval)
+    if autoFlingRunning then return end
+    autoFlingRunning = true
+
+    autoFlingThread = task.spawn(function()
+        while autoFlingRunning do
+            local targets = {}
+            for _, target in ipairs(Players:GetPlayers()) do
+                if target ~= Player and target.Character then
+                    table.insert(targets, target)
+                end
+            end
+
+            for _, target in ipairs(targets) do
+                if not autoFlingRunning then break end
+
+                cyberFlingStopRequested = false
+                cyberFlingActive = true
+                cyberFlingOldPos = {}
+
+                cyberFlingTarget(target)
+
+                cyberFlingActive = false
+                task.wait(0.5)
+            end
+
+            if not autoFlingRunning then break end
+            task.wait(interval or 2)
+        end
+    end)
+end
+
+local function cyberFlingAutoStop()
+    autoFlingRunning = false
+    cyberFlingStopRequested = true
+
+    if autoFlingThread then
+        pcall(function() task.cancel(autoFlingThread) end)
+        autoFlingThread = nil
+    end
+
+    cyberFlingStopAll()
+end
+
+-- =========================================
+-- CYBER57 FLING CYBER PAGE (Select + Auto)
+-- =========================================
+
+local flingPage = pages["Fling Cyber"]
+
+label(flingPage, "انتخاب بازیکن برای پرتاب")
+
+local flingSelected = {}
+local flingAvatarCache = {}
+local flingRowList = create("Frame", {
+    Size = UDim2.new(1, -4, 0, 10),
+    AutomaticSize = Enum.AutomaticSize.Y,
+    BackgroundTransparency = 1
+}, flingPage)
+
+create("UIListLayout", {
+    Padding = UDim.new(0, 6),
+    SortOrder = Enum.SortOrder.LayoutOrder
+}, flingRowList)
+
+local function refreshFlingList()
+    for _, child in ipairs(flingRowList:GetChildren()) do
+        if child:IsA("Frame") then child:Destroy() end
+    end
 
     for _, target in ipairs(Players:GetPlayers()) do
-        if target ~= Player and target.Character then
+        if target ~= Player then
+            local row = create("Frame", {
+                Size = UDim2.new(1, -4, 0, 52),
+                BackgroundColor3 = Color3.fromRGB(35, 28, 39),
+                BorderSizePixel = 0
+            }, flingRowList)
+
+            corner(row, 7)
+
+            local avatar = create("ImageLabel", {
+                Size = UDim2.fromOffset(44, 44),
+                Position = UDim2.fromOffset(4, 4),
+                BackgroundColor3 = Color3.fromRGB(20, 20, 25),
+                BorderSizePixel = 0,
+                Image = "rbxassetid://0"
+            }, row)
+            corner(avatar, 6)
+
+            task.spawn(function()
+                local ok, img = pcall(function()
+                    return Players:GetUserThumbnailAsync(
+                        target.UserId,
+                        Enum.ThumbnailType.HeadShot,
+                        Enum.ThumbnailSize.Size100x100
+                    )
+                end)
+                if ok and img and avatar and avatar.Parent then
+                    avatar.Image = img
+                end
+            end)
+
+            create("TextLabel", {
+                Size = UDim2.new(1, -110, 0, 22),
+                Position = UDim2.fromOffset(54, 6),
+                BackgroundTransparency = 1,
+                Text = target.DisplayName,
+                TextColor3 = WHITE,
+                TextSize = 12,
+                Font = Enum.Font.GothamBold,
+                TextXAlignment = Enum.TextXAlignment.Left
+            }, row)
+
+            create("TextLabel", {
+                Size = UDim2.new(1, -110, 0, 18),
+                Position = UDim2.fromOffset(54, 28),
+                BackgroundTransparency = 1,
+                Text = "@" .. target.Name,
+                TextColor3 = Color3.fromRGB(180, 180, 190),
+                TextSize = 10,
+                Font = Enum.Font.Gotham,
+                TextXAlignment = Enum.TextXAlignment.Left
+            }, row)
+
+            local check = create("TextButton", {
+                Size = UDim2.fromOffset(28, 28),
+                Position = UDim2.new(1, -36, 0.5, -14),
+                BackgroundColor3 = Color3.fromRGB(50, 50, 55),
+                Text = "",
+                BorderSizePixel = 0
+            }, row)
+            corner(check, 6)
+
+            local checkMark = create("TextLabel", {
+                Size = UDim2.fromScale(1, 1),
+                BackgroundTransparency = 1,
+                Text = "✓",
+                TextColor3 = Color3.fromRGB(80, 230, 120),
+                TextSize = 20,
+                Font = Enum.Font.GothamBold,
+                Visible = flingSelected[target] ~= nil
+            }, check)
+
+            check.MouseButton1Click:Connect(function()
+                if flingSelected[target] then
+                    flingSelected[target] = nil
+                    checkMark.Visible = false
+                else
+                    flingSelected[target] = target
+                    checkMark.Visible = true
+                end
+                setStatus("انتخاب شده: " .. tostring(#(function()
+                    local t = {}
+                    for _ in pairs(flingSelected) do table.insert(t, true) end
+                    return t
+                end)()))
+            end)
+        end
+    end
+end
+
+-- دکمه‌ها
+local function countSelected()
+    local n = 0
+    for _ in pairs(flingSelected) do n = n + 1 end
+    return n
+end
+
+button(flingPage, "به‌روزرسانی لیست", refreshFlingList)
+
+button(flingPage, "انتخاب همه", function()
+    for _, target in ipairs(Players:GetPlayers()) do
+        if target ~= Player then
+            flingSelected[target] = target
+        end
+    end
+    refreshFlingList()
+    setStatus("همه انتخاب شدند")
+end)
+
+button(flingPage, "لغو انتخاب همه", function()
+    flingSelected = {}
+    refreshFlingList()
+    setStatus("انتخاب‌ها پاک شد")
+end)
+
+button(flingPage, "Fling Selected (پرتاب انتخاب‌شده‌ها)", function()
+    local targets = {}
+    for _, target in pairs(flingSelected) do
+        if target and target.Parent and target.Character then
             table.insert(targets, target)
         end
     end
 
     if #targets == 0 then
-        setStatus("تارگتی وجود ندارد")
+        setStatus("هیچ بازیکنی انتخاب نشده")
         return
     end
 
+    cyberFlingStopRequested = false
     cyberFlingActive = true
-    cyberFlingThreads = {}
     cyberFlingOldPos = {}
 
     for _, target in ipairs(targets) do
-        local thread = task.spawn(function()
+        task.spawn(function()
             cyberFlingTarget(target)
         end)
-        table.insert(cyberFlingThreads, thread)
     end
 
-    setStatus("Fling ALL روشن — " .. #targets .. " تارگت")
-end
+    setStatus("Fling Selected: " .. #targets .. " تارگت")
+end)
 
-button(playersPage, "Fling All: روشن / خاموش", function()
-    if cyberFlingActive then
-        cyberFlingStopAll()
+button(flingPage, "Fling All (Auto Loop) — روشن / خاموش", function()
+    if autoFlingRunning then
+        cyberFlingAutoStop()
+        setStatus("Fling Auto خاموش")
     else
-        cyberFlingStartAll()
+        cyberFlingAutoLoop(2)
+        setStatus("Fling Auto روشن — پشت سر هم روی همه")
     end
+end)
+
+refreshFlingList()
+
+Players.PlayerAdded:Connect(function()
+    task.wait(1)
+    refreshFlingList()
+end)
+Players.PlayerRemoving:Connect(function(target)
+    flingSelected[target] = nil
+    refreshFlingList()
 end)
 
 -- تنظیمات
@@ -1142,11 +1150,9 @@ local minimized = false
 
 button(settings, "جمع کردن / باز کردن پنل", function()
     minimized = not minimized
-
     sidebar.Visible = not minimized
     pagesHolder.Visible = not minimized
     dragArea.Visible = not minimized
-
     main.Size = minimized
         and UDim2.fromOffset(530, 45)
         or UDim2.fromOffset(530, 365)
@@ -1157,17 +1163,13 @@ button(settings, "بازنشانی تنظیمات حرکت", function()
     jumpPower = 50
     flySpeed = 45
     spinSpeed = 10
-
     applyMovement()
     stopFly()
-
     spinEnabled = false
-
     if spinConnection then
         spinConnection:Disconnect()
         spinConnection = nil
     end
-
     setStatus("تنظیمات بازنشانی شد")
 end)
 
@@ -1199,7 +1201,6 @@ local floatPosition
 floating.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1
         or input.UserInputType == Enum.UserInputType.Touch then
-
         floatDragging = true
         floatStart = input.Position
         floatPosition = floating.Position
@@ -1212,7 +1213,6 @@ UIS.InputChanged:Connect(function(input)
         or input.UserInputType == Enum.UserInputType.Touch
     ) then
         local delta = input.Position - floatStart
-
         floating.Position = UDim2.new(
             floatPosition.X.Scale,
             floatPosition.X.Offset + delta.X,
@@ -1241,14 +1241,9 @@ end)
 -- respawn
 Player.CharacterAdded:Connect(function()
     cleanupFly()
-
     task.wait(0.5)
-
     applyMovement()
-
-    if espEnabled then
-        setESP(true)
-    end
+    if espEnabled then setESP(true) end
 end)
 
 addReport("پنل CYBER 57 فعال شد", RED)
