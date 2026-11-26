@@ -1,4 +1,3 @@
-
 -- CYBER 57 V2 | FULL REBUILT
 -- LocalScript داخل StarterPlayer > StarterPlayerScripts
 
@@ -856,6 +855,282 @@ button(playersPage, "نمایش کاراکترها از پشت دیوار: رو�
         espEnabled and "نمایش کاراکترها روشن"
         or "نمایش کاراکترها خاموش"
     )
+end)
+
+-- =========================================
+-- CYBER57 FLING ALL | MULTI-TARGET
+-- =========================================
+
+local cyberFlingActive = false
+local cyberFlingThreads = {}
+local cyberFlingOldPos = {}
+local cyberFlingOldFPDH = workspace.FallenPartsDestroyHeight
+
+local function cyberFlingStopAll()
+    cyberFlingActive = false
+
+    for _, thread in pairs(cyberFlingThreads) do
+        if coroutine.status(thread) ~= "dead" then
+            pcall(function() task.cancel(thread) end)
+        end
+    end
+
+    cyberFlingThreads = {}
+
+    workspace.FallenPartsDestroyHeight = cyberFlingOldFPDH
+
+    local myChar = getCharacter()
+    local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
+
+    if myHum then
+        myHum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+        workspace.CurrentCamera.CameraSubject = myHum
+    end
+
+    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+
+    if myRoot then
+        local bv = myRoot:FindFirstChild("CYBER57_FlingAnchor")
+        if bv then bv:Destroy() end
+    end
+
+    setStatus("Fling ALL خاموش")
+end
+
+local function cyberFlingTarget(target)
+    if target == Player then return end
+
+    local myChar = Player.Character
+    local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
+    local myRoot = myHum and myHum.RootPart
+
+    if not myChar or not myHum or not myRoot then
+        return
+    end
+
+    local tChar = target.Character
+    if not tChar then return end
+
+    local tHum = tChar:FindFirstChildOfClass("Humanoid")
+    local tRoot = tHum and tHum.RootPart
+    local tHead = tChar:FindFirstChild("Head")
+
+    local tAccessory = tChar:FindFirstChildOfClass("Accessory")
+    local tHandle = tAccessory and tAccessory:FindFirstChild("Handle")
+
+    if myRoot.Velocity.Magnitude < 50 then
+        cyberFlingOldPos[target] = myRoot.CFrame
+    end
+
+    if tHum and tHum.Sit then
+        return
+    end
+
+    if tHead then
+        workspace.CurrentCamera.CameraSubject = tHead
+    elseif tHandle then
+        workspace.CurrentCamera.CameraSubject = tHandle
+    elseif tHum and tRoot then
+        workspace.CurrentCamera.CameraSubject = tHum
+    end
+
+    if not tChar:FindFirstChildWhichIsA("BasePart") then
+        return
+    end
+
+    local function applyPos(basePart, pos, ang)
+        myRoot.CFrame = CFrame.new(basePart.Position) * pos * ang
+        myChar:SetPrimaryPartCFrame(CFrame.new(basePart.Position) * pos * ang)
+        myRoot.Velocity = Vector3.new(9e7, 9e7 * 10, 9e7)
+        myRoot.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
+    end
+
+    local function flingBasePart(basePart)
+        local duration = 2
+        local startTime = tick()
+        local angle = 0
+
+        repeat
+            if not cyberFlingActive then break end
+            if not myRoot or not myRoot.Parent then break end
+
+            if basePart.Velocity.Magnitude < 50 then
+                angle = angle + 100
+
+                applyPos(
+                    basePart,
+                    CFrame.new(0, 1.5, 0) + tHum.MoveDirection * basePart.Velocity.Magnitude / 1.25,
+                    CFrame.Angles(math.rad(angle), 0, 0)
+                )
+                task.wait()
+
+                applyPos(
+                    basePart,
+                    CFrame.new(0, -1.5, 0) + tHum.MoveDirection * basePart.Velocity.Magnitude / 1.25,
+                    CFrame.Angles(math.rad(angle), 0, 0)
+                )
+                task.wait()
+
+                applyPos(
+                    basePart,
+                    CFrame.new(0, 1.5, 0) + tHum.MoveDirection * basePart.Velocity.Magnitude / 1.25,
+                    CFrame.Angles(math.rad(angle), 0, 0)
+                )
+                task.wait()
+
+                applyPos(
+                    basePart,
+                    CFrame.new(0, -1.5, 0) + tHum.MoveDirection * basePart.Velocity.Magnitude / 1.25,
+                    CFrame.Angles(math.rad(angle), 0, 0)
+                )
+                task.wait()
+
+                applyPos(
+                    basePart,
+                    CFrame.new(0, 1.5, 0) + tHum.MoveDirection,
+                    CFrame.Angles(math.rad(angle), 0, 0)
+                )
+                task.wait()
+
+                applyPos(
+                    basePart,
+                    CFrame.new(0, -1.5, 0) + tHum.MoveDirection,
+                    CFrame.Angles(math.rad(angle), 0, 0)
+                )
+                task.wait()
+            else
+                applyPos(
+                    basePart,
+                    CFrame.new(0, 1.5, tHum.WalkSpeed),
+                    CFrame.Angles(math.rad(90), 0, 0)
+                )
+                task.wait()
+
+                applyPos(
+                    basePart,
+                    CFrame.new(0, -1.5, -tHum.WalkSpeed),
+                    CFrame.Angles(0, 0, 0)
+                )
+                task.wait()
+
+                applyPos(
+                    basePart,
+                    CFrame.new(0, 1.5, tHum.WalkSpeed),
+                    CFrame.Angles(math.rad(90), 0, 0)
+                )
+                task.wait()
+
+                applyPos(
+                    basePart,
+                    CFrame.new(0, -1.5, 0),
+                    CFrame.Angles(math.rad(90), 0, 0)
+                )
+                task.wait()
+
+                applyPos(
+                    basePart,
+                    CFrame.new(0, -1.5, 0),
+                    CFrame.Angles(0, 0, 0)
+                )
+                task.wait()
+
+                applyPos(
+                    basePart,
+                    CFrame.new(0, -1.5, 0),
+                    CFrame.Angles(math.rad(90), 0, 0)
+                )
+                task.wait()
+
+                applyPos(
+                    basePart,
+                    CFrame.new(0, -1.5, 0),
+                    CFrame.Angles(0, 0, 0)
+                )
+                task.wait()
+            end
+        until startTime + duration < tick() or not cyberFlingActive
+    end
+
+    workspace.FallenPartsDestroyHeight = 0 / 0
+
+    local bv = Instance.new("BodyVelocity")
+    bv.Name = "CYBER57_FlingAnchor"
+    bv.Parent = myRoot
+    bv.Velocity = Vector3.new(0, 0, 0)
+    bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+
+    myHum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+
+    if tRoot then
+        flingBasePart(tRoot)
+    elseif tHead then
+        flingBasePart(tHead)
+    elseif tHandle then
+        flingBasePart(tHandle)
+    end
+
+    bv:Destroy()
+    myHum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+    workspace.CurrentCamera.CameraSubject = myHum
+
+    local savedPos = cyberFlingOldPos[target]
+
+    if savedPos then
+        repeat
+            myRoot.CFrame = savedPos * CFrame.new(0, 0.5, 0)
+            myChar:SetPrimaryPartCFrame(savedPos * CFrame.new(0, 0.5, 0))
+            myHum:ChangeState("GettingUp")
+
+            for _, part in pairs(myChar:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.Velocity = Vector3.new()
+                    part.RotVelocity = Vector3.new()
+                end
+            end
+            task.wait()
+        until (myRoot.Position - savedPos.p).Magnitude < 25
+            or not cyberFlingActive
+
+        workspace.FallenPartsDestroyHeight = cyberFlingOldFPDH
+    end
+end
+
+local function cyberFlingStartAll()
+    if cyberFlingActive then return end
+
+    local targets = {}
+
+    for _, target in ipairs(Players:GetPlayers()) do
+        if target ~= Player and target.Character then
+            table.insert(targets, target)
+        end
+    end
+
+    if #targets == 0 then
+        setStatus("تارگتی وجود ندارد")
+        return
+    end
+
+    cyberFlingActive = true
+    cyberFlingThreads = {}
+    cyberFlingOldPos = {}
+
+    for _, target in ipairs(targets) do
+        local thread = task.spawn(function()
+            cyberFlingTarget(target)
+        end)
+        table.insert(cyberFlingThreads, thread)
+    end
+
+    setStatus("Fling ALL روشن — " .. #targets .. " تارگت")
+end
+
+button(playersPage, "Fling All: روشن / خاموش", function()
+    if cyberFlingActive then
+        cyberFlingStopAll()
+    else
+        cyberFlingStartAll()
+    end
 end)
 
 -- تنظیمات
